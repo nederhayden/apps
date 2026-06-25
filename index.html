@@ -19,12 +19,18 @@
     }
     h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
     p { color: #6e6e73; margin-bottom: 32px; }
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      max-width: 400px;
+    }
     .app-card {
       background: #fff;
       border-radius: 16px;
       padding: 24px 28px;
       width: 100%;
-      max-width: 400px;
       box-shadow: 0 2px 12px rgba(0,0,0,.08);
       display: flex;
       align-items: center;
@@ -42,13 +48,23 @@
   <h1>Apps by Neder Hayden</h1>
   <p>Políticas de privacidade e suporte</p>
 
-  <a class="app-card" href="privacy.html">
-    <span>💧</span>
-    <div>
-      <h2>Beber Água</h2>
-      <p>Privacidade · Suporte</p>
-    </div>
-  </a>
+  <div class="cards">
+    <a class="app-card" href="beber-agua/privacy.html">
+      <span>💧</span>
+      <div>
+        <h2>Beber Água</h2>
+        <p>Privacidade · Suporte</p>
+      </div>
+    </a>
+
+    <a class="app-card" href="dev-career-idle-tycoon/privacy.html">
+      <span>&lt;/&gt;</span>
+      <div>
+        <h2>Dev Career Idle Tycoon</h2>
+        <p>Privacidade · Suporte</p>
+      </div>
+    </a>
+  </div>
 
   <footer>&copy; 2026 Neder Hayden</footer>
 </body>
