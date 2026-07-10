@@ -766,9 +766,10 @@
   }
 
   function updateProgress(){
+    const applicable = requiredList.filter(item => !(item.when && !item.when()));
     let filled = 0;
-    requiredList.forEach(item => { if(isFilled(item)) filled++; });
-    const pct = Math.round((filled / requiredList.length) * 100);
+    applicable.forEach(item => { if(isFilled(item)) filled++; });
+    const pct = applicable.length ? Math.round((filled / applicable.length) * 100) : 0;
     progressFill.style.width = pct + '%';
     progressPct.textContent = pct + '%';
     if(pct === 100){ stampEl.textContent = 'Completo'; stampEl.dataset.state = 'done'; }
