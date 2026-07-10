@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Briefing Técnico de Software</title>
+<style>
+  :root{
+    --navy: #0B2545;
+    --navy-2: #10305C;
+    --paper: #EDF2F7;
+    --paper-2: #E1E9F2;
+    --ink: #0B2545;
+    --cyan: #4FA8E0;
+    --cyan-dim: rgba(79,168,224,0.18);
+    --amber: #E2A33D;
+    --green: #4E9A6B;
+    --red: #C6564A;
+    --slate: #5C7896;
+    --grid-line: rgba(79,168,224,0.14);
+    --radius: 3px;
+    --disp: 'Space Grotesk', sans-serif;
+    --body: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0/32px 32px,
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0/32px 32px,
+      var(--navy);
+    color:var(--ink);
+    font-family:var(--body);
+    min-height:100vh;
+    padding-bottom:64px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important;}
+  }
+
+  .status-bar{
+    position:sticky; top:0; z-index:50;
+    background:var(--navy);
+    border-bottom:1px solid rgba(79,168,224,0.35);
+    padding:10px 20px;
+    display:flex; align-items:center; gap:14px;
+  }
+  .status-bar .label{
+    font-family:var(--mono); font-size:11px; letter-spacing:.08em;
+    color:var(--cyan); white-space:nowrap; text-transform:uppercase;
+  }
+  .progress-track{
+    flex:1; height:6px; background:rgba(255,255,255,0.08);
+    border-radius:4px; overflow:hidden;
+  }
+  .progress-fill{
+    height:100%; width:0%; background:linear-gradient(90deg, var(--cyan), #7FC4EE);
+    transition:width .35s ease;
+  }
+  .status-bar .pct{
+    font-family:var(--mono); font-size:12px; color:#fff; min-width:38px; text-align:right;
+  }
+
+  .wrap{max-width:860px; margin:0 auto; padding:28px 20px 0;}
+
+  .titleblock{
+    background:var(--paper);
+    border:1px solid rgba(11,37,69,0.25);
+    border-radius:var(--radius);
+    margin-bottom:28px;
+    position:relative;
+    box-shadow:0 18px 40px rgba(0,0,0,0.28);
+  }
+  .titleblock-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding:22px 24px 16px; gap:20px; flex-wrap:wrap;
+  }
+  .titleblock-head h1{
+    font-family:var(--disp); font-size:22px; font-weight:700; margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .titleblock-head p{
+    margin:0; color:var(--slate); font-size:13.5px; max-width:46ch; line-height:1.5;
+  }
+  .stamp{
+    font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.08em;
+    border:2px solid var(--amber); color:var(--amber);
+    padding:7px 12px; border-radius:2px; transform:rotate(-6deg);
+    text-transform:uppercase; white-space:nowrap; flex-shrink:0;
+  }
+  .stamp[data-state="mid"]{border-color:var(--amber); color:var(--amber);}
+  .stamp[data-state="done"]{border-color:var(--green); color:var(--green);}
+  .stamp[data-state="start"]{border-color:var(--red); color:var(--red);}
+
+  .titleblock-grid{
+    display:grid; grid-template-columns:1.3fr 1fr 1fr 0.7fr;
+    border-top:1px solid rgba(11,37,69,0.18);
+  }
+  .tb-cell{
+    padding:10px 14px; border-right:1px solid rgba(11,37,69,0.18);
+    border-top:1px solid rgba(11,37,69,0.18);
+  }
+  .tb-cell:nth-child(4n){border-right:none;}
+  .tb-cell label{
+    display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.08em;
+    color:var(--slate); text-transform:uppercase; margin-bottom:4px;
+  }
+  .tb-cell input{
+    width:100%; border:none; background:transparent; font-family:var(--body);
+    font-size:14px; color:var(--ink); padding:2px 0; outline:none;
+  }
+  .tb-cell input:focus{border-bottom:1px solid var(--cyan);}
+  .tb-static{font-family:var(--mono); font-size:13px; color:var(--ink);}
+
+  .sheet{
+    background:var(--paper);
+    border:1px solid rgba(11,37,69,0.22);
+    border-top:2px dashed rgba(11,37,69,0.35);
+    border-radius:0 0 var(--radius) var(--radius);
+    margin-bottom:22px;
+    padding:22px 24px 26px;
+  }
+  .sheet-head{
+    display:flex; align-items:baseline; gap:10px; margin-bottom:4px;
+  }
+  .sheet-no{
+    font-family:var(--mono); font-size:12px; color:var(--cyan); font-weight:600;
+    background:var(--cyan-dim); padding:2px 7px; border-radius:2px; letter-spacing:.05em;
+  }
+  .sheet-head h2{
+    font-family:var(--disp); font-size:16.5px; font-weight:600; margin:0; letter-spacing:-.005em;
+  }
+  .sheet-sub{
+    color:var(--slate); font-size:13px; margin:2px 0 18px; line-height:1.5;
+  }
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field > label, fieldset.field legend{
+    display:block; font-size:13.5px; font-weight:600; margin-bottom:6px; color:var(--ink);
+  }
+  .req:after{content:" *"; color:var(--amber); font-family:var(--mono);}
+  .hint{font-size:12px; color:var(--slate); margin:2px 0 8px; font-weight:400;}
+
+  input[type="text"], input[type="date"], textarea{
+    width:100%; font-family:var(--body); font-size:14px; color:var(--ink);
+    background:#fff; border:1px solid rgba(11,37,69,0.28); border-radius:2px;
+    padding:9px 11px; outline:none;
+  }
+  textarea{resize:vertical; min-height:64px; line-height:1.5;}
+  input[type="text"]:focus, input[type="date"]:focus, textarea:focus{
+    border-color:var(--cyan); box-shadow:0 0 0 3px var(--cyan-dim);
+  }
+
+  fieldset{border:none; margin:0; padding:0;}
+
+  .chip-cat{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; color:var(--slate);
+    text-transform:uppercase; margin:14px 0 8px;
+  }
+  .chip-cat:first-child{margin-top:0;}
+  .chip-group{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr));
+    gap:8px;
+  }
+  .chip{
+    display:flex; align-items:flex-start; gap:8px;
+    border:1px solid rgba(11,37,69,0.25); border-radius:2px;
+    padding:9px 10px; font-size:13px; cursor:pointer; background:#fff;
+    line-height:1.35;
+  }
+  .chip input{margin:2px 0 0; flex-shrink:0;}
+  .chip.is-checked{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .chip .code{font-family:var(--mono); font-size:10px; color:var(--cyan); margin-right:2px;}
+  .chip.is-checked .code{color:#9FD0F0;}
+
+  .choice-group{display:flex; flex-direction:column; gap:8px;}
+  .choice{
+    display:flex; align-items:flex-start; gap:9px;
+    border:1px solid rgba(11,37,69,0.25); border-radius:2px;
+    padding:10px 12px; font-size:13.5px; cursor:pointer; background:#fff;
+  }
+  .choice input{margin-top:2px; flex-shrink:0;}
+  .choice.is-checked{border-color:var(--cyan); background:var(--cyan-dim);}
+
+  .legal-note{
+    margin-top:18px; border-left:3px solid var(--cyan); background:var(--cyan-dim);
+    padding:11px 14px; font-size:12px; line-height:1.6; color:var(--navy-2);
+    border-radius:0 2px 2px 0;
+  }
+
+  .field-error input[type="text"], .field-error input[type="date"], .field-error textarea,
+  .field-error .chip-group, .field-error .choice-group{
+    outline:2px solid var(--red); outline-offset:3px; border-radius:3px;
+  }
+  .error-msg{
+    display:none; color:var(--red); font-family:var(--mono); font-size:11.5px; margin-top:6px;
+  }
+  .field-error .error-msg{display:block;}
+
+  .banner{
+    display:none; background:#fff4f2; border:1px solid var(--red); color:#8a352c;
+    border-radius:var(--radius); padding:14px 18px; margin-bottom:20px; font-size:13.5px;
+  }
+  .banner.show{display:block;}
+  .banner strong{display:block; margin-bottom:6px; font-family:var(--disp);}
+  .banner ul{margin:0; padding-left:18px;}
+  .banner li{margin-bottom:2px;}
+
+  .submit-row{display:flex; justify-content:flex-end; margin:8px 0 34px;}
+  button{
+    font-family:var(--body); font-size:14px; font-weight:600; cursor:pointer;
+    border-radius:2px; border:none; padding:13px 22px;
+  }
+  #generateBtn{background:var(--cyan); color:var(--navy);}
+  #generateBtn:hover{background:#6FBBEB;}
+  #generateBtn:disabled{opacity:.6; cursor:not-allowed;}
+
+  .output-sheet{
+    background:var(--paper); border:1px solid rgba(11,37,69,0.22);
+    border-radius:var(--radius); padding:24px; margin-bottom:60px;
+  }
+  .hidden{display:none;}
+  .output-sheet h2{font-family:var(--disp); font-size:18px; margin:0 0 4px;}
+  .complexity-card{
+    display:flex; gap:22px; flex-wrap:wrap; align-items:center;
+    background:var(--navy); color:#fff; border-radius:2px; padding:16px 18px; margin:16px 0 20px;
+  }
+  .complexity-card .metric .k{
+    font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:#9FC7E8; text-transform:uppercase;
+  }
+  .complexity-card .metric .v{font-family:var(--disp); font-size:18px; font-weight:600;}
+  .complexity-note{font-size:12px; color:#B9D3EA; max-width:60ch; line-height:1.5;}
+  .summary-text{
+    white-space:pre-wrap; font-family:var(--mono); font-size:12.5px; line-height:1.6;
+    background:#fff; border:1px solid rgba(11,37,69,0.22); border-radius:2px;
+    padding:16px; max-height:480px; overflow:auto;
+  }
+  .output-actions{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center;}
+  #copyBtn, #downloadBtn{background:#fff; color:var(--ink); border:1px solid rgba(11,37,69,0.3);}
+  #copyBtn:hover, #downloadBtn:hover{border-color:var(--cyan);}
+  #sendBtn{background:var(--navy); color:#fff;}
+  #sendBtn:hover{background:var(--navy-2);}
+  #sendBtn:disabled{opacity:.6; cursor:not-allowed;}
+  .toast{
+    font-family:var(--mono); font-size:12px; color:var(--green); margin-left:6px;
+    opacity:0; transition:opacity .2s;
+  }
+  .toast.show{opacity:1;}
+
+  .send-status{
+    margin-top:12px; padding:12px 14px; border-radius:2px;
+    font-family:var(--mono); font-size:12.5px; display:none;
+  }
+  .send-status.success{
+    background:#edfaf3; border:1px solid var(--green); color:#2d6b47; display:block;
+  }
+  .send-status.error{
+    background:#fff4f2; border:1px solid var(--red); color:#8a352c; display:block;
+  }
+
+  @media (max-width:640px){
+    .titleblock-grid{grid-template-columns:1fr 1fr;}
+    .tb-cell:nth-child(4n){border-right:1px solid rgba(11,37,69,0.18);}
+    .tb-cell:nth-child(2n){border-right:none;}
+    .stamp{transform:rotate(0deg);}
+  }
+</style>
+</head>
+<body>
+
+<div class="status-bar">
+  <span class="label">Status do documento</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="pct" id="progressPct">0%</span>
+</div>
+
+<div class="wrap">
+
+  <div class="titleblock">
+    <div class="titleblock-head">
+      <div>
+        <h1>Briefing Técnico de Software</h1>
+        <p>Preencha todos os campos marcados com * — eles são a base para calcular escopo, prazo e investimento do projeto.</p>
+      </div>
+      <div class="stamp" id="stampEl" data-state="start">Em aberto</div>
+    </div>
+    <div class="titleblock-grid">
+      <div class="tb-cell">
+        <label for="clientName">Cliente / Empresa *</label>
+        <input type="text" id="clientName" placeholder="Nome do cliente ou empresa">
+      </div>
+      <div class="tb-cell">
+        <label for="clientContact">Contato (e-mail / WhatsApp) *</label>
+        <input type="text" id="clientContact" placeholder="email@exemplo.com">
+      </div>
+      <div class="tb-cell">
+        <label>Data</label>
+        <span class="tb-static" id="docDate">—</span>
+      </div>
+      <div class="tb-cell">
+        <label>Documento Nº</label>
+        <span class="tb-static">BRF-001 · Rev. 00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="banner" id="errorBanner">
+    <strong>Faltam preencher alguns campos obrigatórios:</strong>
+    <ul id="errorList"></ul>
+  </div>
+
+  <form id="briefForm">
+
+    <!-- 01 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 01/13</span><h2>Visão Geral do Projeto</h2></div>
+      <p class="sheet-sub">O contexto que explica por que esse software precisa existir.</p>
+      <div class="field">
+        <label class="req" for="problem">Que problema esse software resolve?</label>
+        <textarea id="problem" placeholder="Descreva a dor ou necessidade que motivou este projeto"></textarea>
+        <div class="error-msg">Campo obrigatório.</div>
+      </div>
+      <div class="field">
+        <label class="req" for="endUsers">Quem vai usar o software no dia a dia?</label>
+        <textarea id="endUsers" placeholder="Ex: clientes finais, equipe interna, administradores..."></textarea>
+        <div class="error-msg">Campo obrigatório.</div>
+      </div>
+      <div class="field">
+        <label class="req" for="currentSolution">Como isso é resolvido hoje?</label>
+        <div class="hint">Planilha, WhatsApp, outro sistema, papel, processo manual — o que existe agora?</div>
+        <textarea id="currentSolution" placeholder="Descreva o processo atual, mesmo que seja informal"></textarea>
+        <div class="error-msg">Campo obrigatório.</div>
+      </div>
+      <div class="field">
+        <label for="whyNow">Por que resolver isso agora?</label>
+        <textarea id="whyNow" placeholder="Opcional — ajuda a entender a urgência real do projeto"></textarea>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 02/13</span><h2>Tipo de Software</h2></div>
+      <p class="sheet-sub">Selecione todos os formatos que se aplicam ao projeto.</p>
+      <fieldset class="field" data-group="swtype">
+        <legend class="req">Este projeto é um(a):</legend>
+        <div class="chip-group">
+          <label class="chip"><input type="checkbox" name="swtype" value="Site institucional / landing page"><span>Site institucional / landing page</span></label>
+          <label class="chip"><input type="checkbox" name="swtype" value="Sistema web completo"><span>Sistema web completo</span></label>
+          <label class="chip"><input type="checkbox" name="swtype" value="Aplicativo mobile (iOS/Android)"><span>Aplicativo mobile (iOS/Android)</span></label>
+          <label class="chip"><input type="checkbox" name="swtype" value="Painel administrativo / interno"><span>Painel administrativo / interno</span></label>
+          <label class="chip"><input type="checkbox" name="swtype" value="Loja virtual (e-commerce)"><span>Loja virtual (e-commerce)</span></label>
+          <label class="chip"><input type="checkbox" name="swtype" value="Integração entre sistemas existentes"><span>Integração entre sistemas existentes</span></label>
+        </div>
+        <div class="error-msg">Selecione pelo menos uma opção.</div>
+      </fieldset>
+      <div class="field">
+        <label for="swtypeOther">Outro tipo (se não está na lista acima)</label>
+        <input type="text" id="swtypeOther" placeholder="Opcional">
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 03/13</span><h2>Funcionalidades Principais</h2></div>
+      <p class="sheet-sub">Marque tudo que o software precisa fazer. Quanto mais preciso aqui, mais preciso é o orçamento.</p>
+      <fieldset class="field" data-group="features">
+        <legend class="req">Funcionalidades necessárias:</legend>
+        <div class="chip-cat">Contas e acesso</div>
+        <div class="chip-group">
+          <label class="chip"><input type="checkbox" name="features" value="Login e cadastro de usuários"><span><span class="code">REQ.01</span>Login e cadastro de usuários</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Login social (Google/Facebook/Apple)"><span><span class="code">REQ.02</span>Login social (Google/Facebook/Apple)</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Múltiplos perfis de acesso (admin, cliente, etc.)"><span><span class="code">REQ.03</span>Múltiplos perfis de acesso</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Recuperação de senha"><span><span class="code">REQ.04</span>Recuperação de senha</span></label>
+        </div>
+        <div class="chip-cat">Conteúdo e dados</div>
+        <div class="chip-group">
+          <label class="chip"><input type="checkbox" name="features" value="Upload de arquivos/imagens"><span><span class="code">REQ.05</span>Upload de arquivos/imagens</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Busca e filtros avançados"><span><span class="code">REQ.06</span>Busca e filtros avançados</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Relatórios e dashboards"><span><span class="code">REQ.07</span>Relatórios e dashboards</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Exportação de dados (PDF/Excel)"><span><span class="code">REQ.08</span>Exportação de dados (PDF/Excel)</span></label>
+        </div>
+        <div class="chip-cat">Comunicação</div>
+        <div class="chip-group">
+          <label class="chip"><input type="checkbox" name="features" value="Notificações (e-mail/push/SMS)"><span><span class="code">REQ.09</span>Notificações (e-mail/push/SMS)</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Chat ou mensagens internas"><span><span class="code">REQ.10</span>Chat ou mensagens internas</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Envio automático de e-mails"><span><span class="code">REQ.11</span>Envio automático de e-mails</span></label>
+        </div>
+        <div class="chip-cat">Comércio</div>
+        <div class="chip-group">
+          <label class="chip"><input type="checkbox" name="features" value="Pagamentos online (cartão/Pix/boleto)"><span><span class="code">REQ.12</span>Pagamentos online (cartão/Pix/boleto)</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Carrinho de compras"><span><span class="code">REQ.13</span>Carrinho de compras</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Assinaturas / cobrança recorrente"><span><span class="code">REQ.14</span>Assinaturas / cobrança recorrente</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Cupons e descontos"><span><span class="code">REQ.15</span>Cupons e descontos</span></label>
+        </div>
+        <div class="chip-cat">Integrações</div>
+        <div class="chip-group">
+          <label class="chip"><input type="checkbox" name="features" value="Integração com WhatsApp"><span><span class="code">REQ.16</span>Integração com WhatsApp</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Integração com API de terceiros"><span><span class="code">REQ.17</span>Integração com API de terceiros</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Integração com ERP/CRM existente"><span><span class="code">REQ.18</span>Integração com ERP/CRM existente</span></label>
+          <label class="chip"><input type="checkbox" name="features" value="Compartilhamento em redes sociais"><span><span class="code">REQ.19</span>Compartilhamento em redes sociais</span></label>
+        </div>
+        <div class="error-msg">Selecione pelo menos uma funcionalidade.</div>
+      </fieldset>
+      <div class="field">
+        <label for="featuresOther">Outras funcionalidades não listadas acima</label>
+        <textarea id="featuresOther" placeholder="Opcional"></textarea>
+      </div>
+      <div class="field">
+        <label class="req" for="top3">Das funcionalidades marcadas, quais são as 3 mais importantes para o lançamento?</label>
+        <div class="hint">Isso define o que é essencial para a v1 — o resto pode virar fase 2.</div>
+        <textarea id="top3" placeholder="1) ... 2) ... 3) ..."></textarea>
+        <div class="error-msg">Campo obrigatório.</div>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 04/13</span><h2>Prioridades (MoSCoW)</h2></div>
+      <p class="sheet-sub">Nem tudo precisa estar pronto no dia 1. Organize o que é essencial do que pode esperar.</p>
+      <div class="field">
+        <label class="req" for="moscowEssential">Essencial — sem isso o projeto não funciona</label>
+        <textarea id="moscowEssential" placeholder="O que precisa obrigatoriamente estar na v1"></textarea>
+        <div class="error-msg">Campo obrigatório.</div>
+      </div>
+      <div class="field">
+        <label for="moscowLater">Importante, mas pode esperar (versão 2)</label>
+        <textarea id="moscowLater" placeholder="Opcional"></textarea>
+      </div>
+      <div class="field">
+        <label for="moscowNice">Desejável — "seria bom ter"</label>
+        <textarea id="moscowNice" placeholder="Opcional"></textarea>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 05/13</span><h2>Plataformas e Dispositivos</h2></div>
+      <p class="sheet-sub">Onde o software precisa rodar.</p>
+      <fieldset class="field" data-group="platforms">
+        <legend class="req">Plataformas necessárias:</legend>
+        <div class="chip-group">
+          <label class="chip"><input type="checkbox" name="platforms" value="Navegador desktop"><span>Navegador desktop</span></label>
+          <label class="chip"><input type="checkbox" name="platforms" value="Navegador mobile (responsivo)"><span>Navegador mobile (responsivo)</span></label>
+          <label class="chip"><input type="checkbox" name="platforms" value="App iOS"><span>App iOS</span></label>
+          <label class="chip"><input type="checkbox" name="platforms" value="App Android"><span>App Android</span></label>
+          <label class="chip"><input type="checkbox" name="platforms" value="Aplicativo desktop (Windows/Mac)"><span>Aplicativo desktop (Windows/Mac)</span></label>
+        </div>
+        <div class="error-msg">Selecione pelo menos uma opção.</div>
+      </fieldset>
+    </section>
+
+    <!-- 06 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 06/13</span><h2>Design e Identidade Visual</h2></div>
+      <p class="sheet-sub">Define se o orçamento precisa incluir trabalho de UI/UX do zero.</p>
+      <fieldset class="field" data-group="hasIdentity">
+        <legend class="req">Já existe identidade visual (logo, cores, manual de marca)?</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="hasIdentity" value="Sim, completa (logo + manual de marca)"><span>Sim, completa (logo + manual de marca)</span></label>
+          <label class="choice"><input type="radio" name="hasIdentity" value="Tenho o básico (só logo)"><span>Tenho o básico (só logo)</span></label>
+          <label class="choice"><input type="radio" name="hasIdentity" value="Não tenho nada ainda"><span>Não tenho nada ainda</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <fieldset class="field" data-group="needsUXUI">
+        <legend class="req">Precisa de design de telas (UI/UX) do zero?</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="needsUXUI" value="Sim, preciso de design completo"><span>Sim, preciso de design completo</span></label>
+          <label class="choice"><input type="radio" name="needsUXUI" value="Só preciso ajustar algo que já existe"><span>Só preciso ajustar algo que já existe</span></label>
+          <label class="choice"><input type="radio" name="needsUXUI" value="Não, já tenho o design pronto"><span>Não, já tenho o design pronto</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <div class="field">
+        <label for="designRefs">Referências de design (sites/apps que você gosta)</label>
+        <input type="text" id="designRefs" placeholder="Opcional — links ou nomes de referência">
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 07/13</span><h2>Integrações com Sistemas Externos</h2></div>
+      <p class="sheet-sub">Integrações costumam ser a parte que mais aumenta prazo e custo — vale mapear com cuidado.</p>
+      <div class="field">
+        <label class="req" for="externalIntegrations">O software precisa se conectar com algum sistema já existente?</label>
+        <div class="hint">Se não precisar, escreva "não" — a resposta em branco não é aceita.</div>
+        <textarea id="externalIntegrations" placeholder="Ex: ERP da empresa, planilha atual, sistema de nota fiscal..."></textarea>
+        <div class="error-msg">Campo obrigatório (pode responder "não").</div>
+      </div>
+      <div class="field">
+        <label for="toolsList">Quais ferramentas pretende usar (pagamento, e-mail, WhatsApp, etc.)?</label>
+        <input type="text" id="toolsList" placeholder="Opcional — ex: Stripe, Mercado Pago, SendGrid...">
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 08/13</span><h2>Usuários, Dados e Escala</h2></div>
+      <p class="sheet-sub">Volume de uso e sensibilidade dos dados mudam a arquitetura do sistema.</p>
+      <div class="field">
+        <label class="req" for="expectedUsers">Quantos usuários você espera no lançamento? E em 1 ano?</label>
+        <input type="text" id="expectedUsers" placeholder="Ex: 50 no lançamento, 500 em 1 ano">
+        <div class="error-msg">Campo obrigatório.</div>
+      </div>
+      <div class="field">
+        <label class="req" for="accessLevels">Existem diferentes níveis de acesso/permissão? Quais?</label>
+        <textarea id="accessLevels" placeholder="Ex: admin, gerente, cliente final... ou 'não, é só um tipo de usuário'"></textarea>
+        <div class="error-msg">Campo obrigatório.</div>
+      </div>
+      <div class="field">
+        <label class="req" for="sensitiveData">Que tipo de dado sensível será armazenado?</label>
+        <div class="hint">Dados pessoais, pagamento, saúde etc. Isso impacta requisitos de segurança e LGPD.</div>
+        <textarea id="sensitiveData" placeholder="Ex: CPF, dados de pagamento, endereço... ou 'nenhum dado sensível'"></textarea>
+        <div class="error-msg">Campo obrigatório.</div>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 09/13</span><h2>Conteúdo e Materiais</h2></div>
+      <p class="sheet-sub">Falta de conteúdo pronto costuma atrasar lançamentos — melhor mapear isso agora.</p>
+      <fieldset class="field" data-group="hasContent">
+        <legend class="req">O conteúdo (textos, imagens, vídeos) já está pronto?</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="hasContent" value="Sim, todo o conteúdo está pronto"><span>Sim, todo o conteúdo está pronto</span></label>
+          <label class="choice"><input type="radio" name="hasContent" value="Tenho parte do conteúdo"><span>Tenho parte do conteúdo</span></label>
+          <label class="choice"><input type="radio" name="hasContent" value="Não tenho nada ainda, preciso de ajuda"><span>Não tenho nada ainda, preciso de ajuda</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <div class="field">
+        <label for="contentProvider">Quem vai fornecer o conteúdo?</label>
+        <input type="text" id="contentProvider" placeholder="Opcional">
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 10/13</span><h2>Prazo e Orçamento</h2></div>
+      <p class="sheet-sub">Alinhar expectativa de prazo e faixa de investimento evita retrabalho de proposta.</p>
+      <div class="field">
+        <label class="req" for="launchDate">Data ideal de lançamento</label>
+        <input type="date" id="launchDate">
+        <div class="error-msg">Campo obrigatório.</div>
+      </div>
+      <div class="field">
+        <label for="fixedDeadlineReason">Existe um prazo fixo que não pode mudar? Por quê?</label>
+        <input type="text" id="fixedDeadlineReason" placeholder="Opcional — ex: evento, lançamento de produto...">
+      </div>
+      <fieldset class="field" data-group="budgetRange">
+        <legend class="req">Faixa de investimento disponível para o projeto</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="budgetRange" value="Até R$ 5.000"><span>Até R$ 5.000</span></label>
+          <label class="choice"><input type="radio" name="budgetRange" value="R$ 5.000 – R$ 15.000"><span>R$ 5.000 – R$ 15.000</span></label>
+          <label class="choice"><input type="radio" name="budgetRange" value="R$ 15.000 – R$ 40.000"><span>R$ 15.000 – R$ 40.000</span></label>
+          <label class="choice"><input type="radio" name="budgetRange" value="Acima de R$ 40.000"><span>Acima de R$ 40.000</span></label>
+          <label class="choice"><input type="radio" name="budgetRange" value="Ainda não defini um valor"><span>Ainda não defini um valor</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <fieldset class="field" data-group="paymentPref">
+        <legend>Preferência de pagamento</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="paymentPref" value="À vista"><span>À vista</span></label>
+          <label class="choice"><input type="radio" name="paymentPref" value="Parcelado"><span>Parcelado</span></label>
+          <label class="choice"><input type="radio" name="paymentPref" value="Por etapas do projeto (sprints/entregas)"><span>Por etapas do projeto (sprints/entregas)</span></label>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- 11 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 11/13</span><h2>Propriedade Intelectual e Direitos do Código</h2></div>
+      <p class="sheet-sub">Define quem é dono do código, o que pode ser reaproveitado e o que pode ser mostrado publicamente.</p>
+      <fieldset class="field" data-group="ipOwnership">
+        <legend class="req">Titularidade do código-fonte após a entrega e pagamento final</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="ipOwnership" value="Cessão total — o cliente passa a ser dono de 100% do código-fonte, sem restrições de uso"><span>Cessão total — o cliente passa a ser dono de 100% do código-fonte, sem restrições de uso</span></label>
+          <label class="choice"><input type="radio" name="ipOwnership" value="Licença de uso exclusiva e perpétua — código pertence ao desenvolvedor, cliente tem direito de uso ilimitado"><span>Licença de uso exclusiva e perpétua — código pertence ao desenvolvedor, cliente tem direito de uso ilimitado</span></label>
+          <label class="choice"><input type="radio" name="ipOwnership" value="Licença de uso não-exclusiva — desenvolvedor pode reaproveitar partes do código em outros projetos"><span>Licença de uso não-exclusiva — desenvolvedor pode reaproveitar partes do código em outros projetos</span></label>
+          <label class="choice"><input type="radio" name="ipOwnership" value="Parceria/sociedade — desenvolvedor e cliente dividem titularidade, manutenção/evolução e lucros da exploração comercial do software"><span>Parceria/sociedade — desenvolvedor e cliente dividem titularidade, manutenção/evolução e lucros da exploração comercial do software</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <div class="field hidden" id="partnershipDetailsWrap">
+        <label for="partnershipDetails">Detalhes da parceria/sociedade</label>
+        <div class="hint">Percentual de divisão dos lucros, quem cuida da manutenção/evolução, o que acontece se um dos lados quiser sair ou vender sua parte.</div>
+        <textarea id="partnershipDetails" placeholder="Ex: 50/50 nos lucros de venda ou assinatura, desenvolvedor cuida da manutenção técnica, cliente cuida da operação/vendas..."></textarea>
+        <div class="error-msg">Campo obrigatório quando a opção de parceria/sociedade é escolhida.</div>
+      </div>
+      <fieldset class="field" data-group="reuseAllowed">
+        <legend class="req">O que o desenvolvedor pode reaproveitar em outros projetos</legend>
+        <div class="chip-group">
+          <label class="chip"><input type="checkbox" name="reuseAllowed" value="Nenhuma parte do código (exclusividade total)"><span>Nenhuma parte do código (exclusividade total)</span></label>
+          <label class="chip"><input type="checkbox" name="reuseAllowed" value="Componentes genéricos, sem relação com o negócio (ex: login, UI kit)"><span>Componentes genéricos, sem relação com o negócio (ex: login, UI kit)</span></label>
+          <label class="chip"><input type="checkbox" name="reuseAllowed" value="Bibliotecas/ferramentas internas criadas antes deste projeto"><span>Bibliotecas/ferramentas internas criadas antes deste projeto</span></label>
+          <label class="chip"><input type="checkbox" name="reuseAllowed" value="Não há restrição"><span>Não há restrição</span></label>
+        </div>
+        <div class="error-msg">Selecione pelo menos uma opção.</div>
+      </fieldset>
+      <fieldset class="field" data-group="publicShowcase">
+        <legend class="req">O projeto pode ser mostrado publicamente (portfólio, redes sociais, GitHub)?</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="publicShowcase" value="Sim, sem restrições — inclusive código-fonte"><span>Sim, sem restrições — inclusive código-fonte</span></label>
+          <label class="choice"><input type="radio" name="publicShowcase" value="Sim, mas só capturas de tela/vídeo do resultado final (sem código-fonte)"><span>Sim, mas só capturas de tela/vídeo do resultado final (sem código-fonte)</span></label>
+          <label class="choice"><input type="radio" name="publicShowcase" value="Só depois de um período de exclusividade após o lançamento"><span>Só depois de um período de exclusividade após o lançamento</span></label>
+          <label class="choice"><input type="radio" name="publicShowcase" value="Não — o projeto é confidencial"><span>Não — o projeto é confidencial</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <fieldset class="field" data-group="repoHosting">
+        <legend class="req">Onde o código-fonte e o repositório ficarão hospedados</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="repoHosting" value="Repositório do cliente — o cliente cria a conta e dá acesso ao desenvolvedor"><span>Repositório do cliente — o cliente cria a conta e dá acesso ao desenvolvedor</span></label>
+          <label class="choice"><input type="radio" name="repoHosting" value="Repositório do desenvolvedor, transferido ao cliente na entrega final"><span>Repositório do desenvolvedor, transferido ao cliente na entrega final</span></label>
+          <label class="choice"><input type="radio" name="repoHosting" value="Repositório do desenvolvedor, com acesso de leitura ao cliente (sem transferência)"><span>Repositório do desenvolvedor, com acesso de leitura ao cliente (sem transferência)</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <fieldset class="field" data-group="ndaNeeded">
+        <legend class="req">Precisa de acordo de confidencialidade (NDA) antes de compartilhar informações do negócio?</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="ndaNeeded" value="Sim"><span>Sim</span></label>
+          <label class="choice"><input type="radio" name="ndaNeeded" value="Não"><span>Não</span></label>
+          <label class="choice"><input type="radio" name="ndaNeeded" value="Não sei, quero avaliar"><span>Não sei, quero avaliar</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <fieldset class="field" data-group="handoffDocs">
+        <legend class="req">Documentação para continuidade por outro desenvolvedor no futuro</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="handoffDocs" value="Sim, preciso de documentação completa (código comentado, README, manual técnico)"><span>Sim, preciso de documentação completa (código comentado, README, manual técnico)</span></label>
+          <label class="choice"><input type="radio" name="handoffDocs" value="Documentação básica é suficiente"><span>Documentação básica é suficiente</span></label>
+          <label class="choice"><input type="radio" name="handoffDocs" value="Não é necessário"><span>Não é necessário</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <div class="legal-note">
+        Base legal: Lei do Software (Lei 9.609/98), art. 2º, §1º. Este formulário registra a intenção das partes; o acordo definitivo deve constar em contrato assinado. Não substitui orientação jurídica.
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 12/13</span><h2>Pós-Lançamento e Manutenção</h2></div>
+      <p class="sheet-sub">Define se a proposta precisa incluir um plano de suporte contínuo.</p>
+      <fieldset class="field" data-group="needsMaintenance">
+        <legend class="req">Vai precisar de manutenção/suporte contínuo após a entrega?</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="needsMaintenance" value="Sim, quero um plano de manutenção contínua"><span>Sim, quero um plano de manutenção contínua</span></label>
+          <label class="choice"><input type="radio" name="needsMaintenance" value="Talvez, quero entender as opções"><span>Talvez, quero entender as opções</span></label>
+          <label class="choice"><input type="radio" name="needsMaintenance" value="Não, só preciso do projeto entregue"><span>Não, só preciso do projeto entregue</span></label>
+        </div>
+        <div class="error-msg">Selecione uma opção.</div>
+      </fieldset>
+      <div class="field">
+        <label for="futureEvolution">Pretende evoluir o sistema com novas funcionalidades no futuro?</label>
+        <textarea id="futureEvolution" placeholder="Opcional"></textarea>
+      </div>
+    </section>
+
+    <!-- 13 -->
+    <section class="sheet">
+      <div class="sheet-head"><span class="sheet-no">FOLHA 13/13</span><h2>Observações Finais</h2></div>
+      <p class="sheet-sub">Espaço livre para qualquer coisa importante que não foi perguntada.</p>
+      <div class="field">
+        <label for="finalNotes">Observações</label>
+        <textarea id="finalNotes" placeholder="Opcional"></textarea>
+      </div>
+    </section>
+
+    <div class="submit-row">
+      <button type="button" id="generateBtn">Gerar e Enviar Briefing</button>
+    </div>
+  </form>
+
+  <section class="output-sheet hidden" id="output">
+    <h2>Resumo Técnico Gerado</h2>
+    <p class="sheet-sub" style="margin-bottom:0;">Use este resumo como base para a proposta de escopo, prazo e valor.</p>
+    <div class="complexity-card">
+      <div class="metric">
+        <div class="k">Complexidade</div>
+        <div class="v" id="cxBucket">—</div>
+      </div>
+      <div class="metric">
+        <div class="k">Pontuação</div>
+        <div class="v" id="cxScore">—</div>
+      </div>
+      <div class="metric">
+        <div class="k">Prazo de referência</div>
+        <div class="v" id="cxWeeks">—</div>
+      </div>
+      <div class="complexity-note">Estimativa indicativa baseada no escopo marcado — um ponto de partida para sua precificação, não um valor fechado.</div>
+    </div>
+    <div class="summary-text" id="summaryText"></div>
+    <div class="output-actions">
+      <button id="copyBtn">Copiar resumo</button>
+      <button id="downloadBtn">Baixar como .txt</button>
+      <button id="sendBtn">Enviar por e-mail</button>
+      <span class="toast" id="toast">Copiado!</span>
+    </div>
+    <div class="send-status" id="sendStatus"></div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  const WEB3FORMS_KEY = 'COLOQUE_SUA_CHAVE_AQUI';
+
+  const progressFill = document.getElementById('progressFill');
+  const progressPct  = document.getElementById('progressPct');
+  const stampEl      = document.getElementById('stampEl');
+
+  document.getElementById('docDate').textContent = new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'});
+
+  const PARTNERSHIP_VALUE = 'Parceria/sociedade — desenvolvedor e cliente dividem titularidade, manutenção/evolução e lucros da exploração comercial do software';
+
+  const requiredList = [
+    {id:'clientName', type:'text', label:'Cliente / Empresa'},
+    {id:'clientContact', type:'text', label:'Contato (e-mail / WhatsApp)'},
+    {id:'problem', type:'text', label:'Que problema esse software resolve?'},
+    {id:'endUsers', type:'text', label:'Quem vai usar o software?'},
+    {id:'currentSolution', type:'text', label:'Como isso é resolvido hoje?'},
+    {group:'swtype', type:'group', label:'Tipo de software'},
+    {group:'features', type:'group', label:'Funcionalidades principais'},
+    {id:'top3', type:'text', label:'3 funcionalidades mais importantes'},
+    {id:'moscowEssential', type:'text', label:'Essencial (MoSCoW)'},
+    {group:'platforms', type:'group', label:'Plataformas'},
+    {group:'hasIdentity', type:'group', label:'Identidade visual existente'},
+    {group:'needsUXUI', type:'group', label:'Precisa de UI/UX do zero'},
+    {id:'externalIntegrations', type:'text', label:'Integrações com sistemas existentes'},
+    {id:'expectedUsers', type:'text', label:'Usuários esperados'},
+    {id:'accessLevels', type:'text', label:'Níveis de acesso/permissão'},
+    {id:'sensitiveData', type:'text', label:'Dados sensíveis armazenados'},
+    {group:'hasContent', type:'group', label:'Conteúdo já pronto'},
+    {id:'launchDate', type:'text', label:'Data ideal de lançamento'},
+    {group:'budgetRange', type:'group', label:'Faixa de investimento'},
+    {group:'ipOwnership', type:'group', label:'Titularidade do código-fonte'},
+    {id:'partnershipDetails', type:'text', label:'Detalhes da parceria/sociedade', when: () => radioValue('ipOwnership') === PARTNERSHIP_VALUE},
+    {group:'reuseAllowed', type:'group', label:'O que pode ser reaproveitado pelo desenvolvedor'},
+    {group:'publicShowcase', type:'group', label:'Projeto pode ser mostrado publicamente'},
+    {group:'repoHosting', type:'group', label:'Onde o repositório será hospedado'},
+    {group:'ndaNeeded', type:'group', label:'Precisa de NDA'},
+    {group:'handoffDocs', type:'group', label:'Documentação para continuidade futura'},
+    {group:'needsMaintenance', type:'group', label:'Necessita manutenção contínua'},
+  ];
+
+  function isFilled(item){
+    if(item.when && !item.when()) return true;
+    if(item.type === 'text'){
+      const el = document.getElementById(item.id);
+      return !!(el && el.value.trim() !== '');
+    }
+    return !!document.querySelector(`input[name="${item.group}"]:checked`);
+  }
+
+  function fieldWrap(item){
+    if(item.type === 'text'){
+      const el = document.getElementById(item.id);
+      return el ? el.closest('.field') : null;
+    }
+    return document.querySelector(`fieldset[data-group="${item.group}"]`);
+  }
+
+  function updateProgress(){
+    let filled = 0;
+    requiredList.forEach(item => { if(isFilled(item)) filled++; });
+    const pct = Math.round((filled / requiredList.length) * 100);
+    progressFill.style.width = pct + '%';
+    progressPct.textContent = pct + '%';
+    if(pct === 100){ stampEl.textContent = 'Completo'; stampEl.dataset.state = 'done'; }
+    else if(pct >= 50){ stampEl.textContent = 'Em andamento'; stampEl.dataset.state = 'mid'; }
+    else { stampEl.textContent = 'Em aberto'; stampEl.dataset.state = 'start'; }
+  }
+
+  document.addEventListener('change', (e) => {
+    if(e.target.matches('input[type="checkbox"], input[type="radio"]')){
+      const grp = e.target.name;
+      document.querySelectorAll(`input[name="${grp}"]`).forEach(inp => {
+        const lbl = inp.closest('label');
+        if(lbl) lbl.classList.toggle('is-checked', inp.checked);
+      });
+      const wrap = e.target.closest('.field-error');
+      if(wrap) wrap.classList.remove('field-error');
+      if(grp === 'ipOwnership'){
+        const show = e.target.value === PARTNERSHIP_VALUE;
+        document.getElementById('partnershipDetailsWrap').classList.toggle('hidden', !show);
+      }
+      updateProgress();
+    }
+  });
+  document.addEventListener('input', (e) => {
+    if(e.target.matches('input[type="text"], input[type="date"], textarea')){
+      const wrap = e.target.closest('.field-error');
+      if(wrap) wrap.classList.remove('field-error');
+      updateProgress();
+    }
+  });
+
+  function validate(){
+    const missing = [];
+    requiredList.forEach(item => {
+      if(!isFilled(item)){
+        missing.push(item);
+        const wrap = fieldWrap(item);
+        if(wrap) wrap.classList.add('field-error');
+      }
+    });
+    return missing;
+  }
+
+  function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function checkedValues(name){ return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(i => i.value); }
+  function radioValue(name){ const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ''; }
+  function isMeaningfulNo(text){ return /^(n[aã]o|nenhum|nenhuma|n\/a|nda)\.?$/i.test(text.trim()); }
+
+  function computeComplexity(){
+    const featCount = checkedValues('features').length;
+    const swCount   = checkedValues('swtype').length;
+    const platCount = checkedValues('platforms').length;
+    const integrations = val('externalIntegrations');
+    const sensitive = val('sensitiveData');
+    const access    = val('accessLevels');
+    const maintenance = radioValue('needsMaintenance');
+    let score = 0;
+    score += featCount * 1;
+    score += swCount * 2;
+    score += platCount * 3;
+    if(integrations && !isMeaningfulNo(integrations)) score += 5;
+    if(access && access.length > 12 && !isMeaningfulNo(access)) score += 3;
+    if(sensitive && !isMeaningfulNo(sensitive)) score += 4;
+    if(maintenance.startsWith('Sim')) score += 2;
+    let bucket, weeks;
+    if(score <= 8){ bucket = 'Simples'; weeks = '2 – 4 semanas'; }
+    else if(score <= 16){ bucket = 'Médio'; weeks = '4 – 8 semanas'; }
+    else if(score <= 26){ bucket = 'Complexo'; weeks = '8 – 16 semanas'; }
+    else { bucket = 'Muito complexo'; weeks = '16+ semanas'; }
+    return {score, bucket, weeks};
+  }
+
+  function buildSummary(cx){
+    const lines = [];
+    lines.push('BRIEFING TÉCNICO DE SOFTWARE');
+    lines.push('Gerado em ' + new Date().toLocaleDateString('pt-BR'));
+    lines.push('='.repeat(50));
+    lines.push('');
+    lines.push('CLIENTE: ' + val('clientName'));
+    lines.push('CONTATO: ' + val('clientContact'));
+    lines.push('');
+    lines.push('-- 1. VISÃO GERAL --');
+    lines.push('Problema a resolver: ' + val('problem'));
+    lines.push('Usuários finais: ' + val('endUsers'));
+    lines.push('Solução atual: ' + val('currentSolution'));
+    if(val('whyNow')) lines.push('Por que agora: ' + val('whyNow'));
+    lines.push('');
+    lines.push('-- 2. TIPO DE SOFTWARE --');
+    lines.push(checkedValues('swtype').join(', ') || '—');
+    if(val('swtypeOther')) lines.push('Outro: ' + val('swtypeOther'));
+    lines.push('');
+    lines.push('-- 3. FUNCIONALIDADES --');
+    lines.push(checkedValues('features').map(f => '- ' + f).join('\n') || '—');
+    if(val('featuresOther')) lines.push('Outras: ' + val('featuresOther'));
+    lines.push('Top 3 prioridades: ' + val('top3'));
+    lines.push('');
+    lines.push('-- 4. PRIORIDADES (MoSCoW) --');
+    lines.push('Essencial: ' + val('moscowEssential'));
+    if(val('moscowLater')) lines.push('Pode esperar: ' + val('moscowLater'));
+    if(val('moscowNice')) lines.push('Desejável: ' + val('moscowNice'));
+    lines.push('');
+    lines.push('-- 5. PLATAFORMAS --');
+    lines.push(checkedValues('platforms').join(', ') || '—');
+    lines.push('');
+    lines.push('-- 6. DESIGN --');
+    lines.push('Identidade visual: ' + radioValue('hasIdentity'));
+    lines.push('Precisa de UI/UX do zero: ' + radioValue('needsUXUI'));
+    if(val('designRefs')) lines.push('Referências: ' + val('designRefs'));
+    lines.push('');
+    lines.push('-- 7. INTEGRAÇÕES --');
+    lines.push('Sistemas existentes: ' + val('externalIntegrations'));
+    if(val('toolsList')) lines.push('Ferramentas: ' + val('toolsList'));
+    lines.push('');
+    lines.push('-- 8. USUÁRIOS, DADOS E ESCALA --');
+    lines.push('Usuários esperados: ' + val('expectedUsers'));
+    lines.push('Níveis de acesso: ' + val('accessLevels'));
+    lines.push('Dados sensíveis: ' + val('sensitiveData'));
+    lines.push('');
+    lines.push('-- 9. CONTEÚDO --');
+    lines.push('Conteúdo pronto: ' + radioValue('hasContent'));
+    if(val('contentProvider')) lines.push('Fornecido por: ' + val('contentProvider'));
+    lines.push('');
+    lines.push('-- 10. PRAZO E ORÇAMENTO --');
+    lines.push('Data ideal de lançamento: ' + val('launchDate'));
+    if(val('fixedDeadlineReason')) lines.push('Prazo fixo: ' + val('fixedDeadlineReason'));
+    lines.push('Faixa de investimento: ' + radioValue('budgetRange'));
+    if(radioValue('paymentPref')) lines.push('Preferência de pagamento: ' + radioValue('paymentPref'));
+    lines.push('');
+    lines.push('-- 11. PROPRIEDADE INTELECTUAL --');
+    lines.push('Titularidade do código: ' + radioValue('ipOwnership'));
+    if(radioValue('ipOwnership') === PARTNERSHIP_VALUE) lines.push('Detalhes da parceria: ' + val('partnershipDetails'));
+    lines.push('Pode ser reaproveitado: ' + (checkedValues('reuseAllowed').join(', ') || '—'));
+    lines.push('Exibição pública/portfólio: ' + radioValue('publicShowcase'));
+    lines.push('Hospedagem do repositório: ' + radioValue('repoHosting'));
+    lines.push('NDA necessário: ' + radioValue('ndaNeeded'));
+    lines.push('Documentação para handoff: ' + radioValue('handoffDocs'));
+    lines.push('');
+    lines.push('-- 12. PÓS-LANÇAMENTO --');
+    lines.push('Manutenção contínua: ' + radioValue('needsMaintenance'));
+    if(val('futureEvolution')) lines.push('Evolução futura: ' + val('futureEvolution'));
+    if(val('finalNotes')){
+      lines.push('');
+      lines.push('-- 13. OBSERVAÇÕES --');
+      lines.push(val('finalNotes'));
+    }
+    lines.push('');
+    lines.push('='.repeat(50));
+    lines.push('DIAGNÓSTICO DE COMPLEXIDADE');
+    lines.push('Complexidade: ' + cx.bucket + ' (pontuação ' + cx.score + ')');
+    lines.push('Prazo de referência: ' + cx.weeks);
+    return lines.join('\n');
+  }
+
+  async function sendEmail(summary){
+    const btn = document.getElementById('sendBtn');
+    const status = document.getElementById('sendStatus');
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+    status.className = 'send-status';
+    status.style.display = 'none';
+
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          subject: 'Novo Briefing Técnico — ' + val('clientName'),
+          from_name: val('clientName') || 'Briefing',
+          replyto: val('clientContact') || '',
+          message: summary,
+        })
+      });
+      const data = await res.json();
+      if(data.success){
+        status.className = 'send-status success';
+        status.textContent = '✓ Briefing enviado para contato@neder.dev com sucesso.';
+        btn.textContent = 'Enviado ✓';
+      } else {
+        throw new Error(data.message || 'Erro desconhecido');
+      }
+    } catch(e) {
+      status.className = 'send-status error';
+      status.textContent = '✗ Falha ao enviar: ' + e.message + '. Copie o resumo e envie manualmente.';
+      btn.disabled = false;
+      btn.textContent = 'Tentar novamente';
+    }
+    status.style.display = 'block';
+  }
+
+  let lastSummary = '';
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    const missing = validate();
+    const banner = document.getElementById('errorBanner');
+    const list   = document.getElementById('errorList');
+    if(missing.length){
+      list.innerHTML = missing.map(m => `<li>${m.label}</li>`).join('');
+      banner.classList.add('show');
+      banner.scrollIntoView({behavior:'smooth', block:'center'});
+      setTimeout(() => { const fw = fieldWrap(missing[0]); if(fw) fw.scrollIntoView({behavior:'smooth', block:'center'}); }, 400);
+      return;
+    }
+    banner.classList.remove('show');
+
+    const cx = computeComplexity();
+    document.getElementById('cxBucket').textContent = cx.bucket;
+    document.getElementById('cxScore').textContent  = cx.score;
+    document.getElementById('cxWeeks').textContent  = cx.weeks;
+
+    lastSummary = buildSummary(cx);
+    document.getElementById('summaryText').textContent = lastSummary;
+
+    const output = document.getElementById('output');
+    output.classList.remove('hidden');
+
+    // reset send state
+    const sendStatus = document.getElementById('sendStatus');
+    sendStatus.className = 'send-status';
+    sendStatus.style.display = 'none';
+    const sendBtn = document.getElementById('sendBtn');
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Enviar por e-mail';
+
+    output.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  document.getElementById('sendBtn').addEventListener('click', () => {
+    if(lastSummary) sendEmail(lastSummary);
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const toast = document.getElementById('toast');
+    const show  = () => { toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1600); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(lastSummary).then(show).catch(() => fallbackCopy(lastSummary, show));
+    } else { fallbackCopy(lastSummary, show); }
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    const slug = (val('clientName') || 'cliente').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+    const blob = new Blob([lastSummary], {type:'text/plain;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'briefing-' + (slug || 'projeto') + '.txt';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  });
+
+  function fallbackCopy(text, cb){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); cb(); }catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  updateProgress();
+})();
+</script>
+</body>
+</html>
